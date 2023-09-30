@@ -1,106 +1,118 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './App.css';
-import axios from 'axios'
-import { useState, useEffect } from 'react'
+
+const weatherColors = {
+  hot: 'rgba(255, 0, 0, 0.5)',    // Red for hot
+  cold: 'rgba(0, 0, 255, 0.5)',   // Blue for cold
+  rainy: 'rgba(0, 128, 255, 0.5)', // Aqua for rainy
+  default: 'rgba(255, 255, 255, 0.2)', // Default background
+};
 
 function App() {
-
-  const [city, setCity] = useState('london');
+  const [city, setCity] = useState('Barddhaman');
   const [weatherData, setWeatherData] = useState(null);
 
-  const APIKey = '3d4f6b61dcc178244b7302428b60d1cd'; // change this to your api key
+  const APIKey = '3d4f6b61dcc178244b7302428b60d1cd'; // change this to your API key
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${APIKey}`;
 
   const getData = () => {
-    axios.get(url)
-      .then(res => setWeatherData(res.data))
-      .catch(err => console.log(err))
-  }
+    axios
+      .get(url)
+      .then((res) => setWeatherData(res.data))
+      .catch((err) => console.log(err));
+  };
 
   useEffect(() => {
     getData();
-    document.getElementById("weatherInput").focus();
-  }, [])
+    document.getElementById('weatherInput').focus();
+  }, []);
 
   const handleChange = (e) => {
     setCity(e.target.value);
-  }
+  };
 
   const handleSubmit = () => {
     getData();
-  }
-  const handleKeypress = e => {
-    //it triggers by pressing the enter key
+  };
+
+  const handleKeypress = (e) => {
     if (e.charCode === 13) {
       getData();
     }
   };
 
-  const name = weatherData ? weatherData.name : '';
-  const country = weatherData ? weatherData.sys.country : '';
-  const humidity = weatherData ? weatherData.main.humidity : '';
-  const pressure = weatherData ? weatherData.main.pressure : '';
   const temp = weatherData ? weatherData.main.temp : '';
   const weather = weatherData ? weatherData.weather[0].description : '';
-  const iconcode = weatherData ? weatherData.weather[0].icon : '#';
 
-  const d = new Date();
+  const getBackgroundColor = (temp, weather) => {
+    if (temp >= 30) {
+      return weatherColors.hot; // Red for hot
+    } else if (temp < 10) {
+      return weatherColors.cold; // Blue for cold
+    } else if (weather.includes('rain')) {
+      return weatherColors.rainy; // Aqua for rainy
+    } else {
+      return weatherColors.default; // Default background
+    }
+  };
 
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const boxBackgroundColor = getBackgroundColor(temp, weather);
 
-  const month = new Array();
-  month[0] = "January";
-  month[1] = "February";
-  month[2] = "March";
-  month[3] = "April";
-  month[4] = "May";
-  month[5] = "June";
-  month[6] = "July";
-  month[7] = "August";
-  month[8] = "September";
-  month[9] = "October";
-  month[10] = "November";
-  month[11] = "December";
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
         <div className="weather">
-          <input id="weatherInput" type="text" name="city" placeholde="city name"
+          <input
+            id="weatherInput"
+            type="text"
+            name="city"
+            placeholder="City name"
             onChange={handleChange}
             onKeyPress={handleKeypress}
           />
           <button onClick={handleSubmit}>Search</button>
         </div>
 
-        <div className="results" style={styles.results}>
-          <div style={{ fontSize: 30 }}>{name}, {country}</div>
+        <div
+          className="results"
+          style={{
+            border: '1px solid #111111',
+            borderRadius: 15,
+            backgroundColor: boxBackgroundColor,
+            padding: '2rem',
+            margin: '1rem',
+            boxShadow: '0 0 15px rgba(0, 0, 0, 0.3)',
+            transition: 'background-color 0.3s ease-in-out',
+          }}
+        >
+          <div style={{ fontSize: 30 }}>
+            {weatherData ? `${weatherData.name}, ${weatherData.sys.country}` : ''}
+          </div>
 
-          <div style={{ color: 'darkgrey', fontSize: 18 }}>{days[d.getDay()]}, {month[d.getMonth()]} {d.getDate()}, {d.getFullYear()}</div>
+          <div style={{ color: 'darkgrey', fontSize: 18 }}>
+            {new Date().toLocaleString()}
+          </div>
 
-          <div style={{ fontSize: 54, fontWeight: 'bold' }}>{Math.round(temp)}' C</div>
+          <div style={{ fontSize: 54, fontWeight: 'bold' }}>
+            {weatherData ? `${Math.round(temp)}' C` : ''}
+          </div>
 
-          <img src={`http://openweathermap.org/img/w/${iconcode}.png`} alt="Weather icon" />
+          <img
+            src={weatherData ? `http://openweathermap.org/img/w/${weatherData.weather[0].icon}.png` : ''}
+            alt="Weather icon"
+          />
 
-          <div style={{ textTransform: 'capitalize', marginBottom: 20 }}>{weather}</div>
+          <div style={{ textTransform: 'capitalize', marginBottom: 20 }}>
+            {weatherData ? weatherData.weather[0].description : ''}
+          </div>
 
-          <div>Humidity : {humidity}%</div>
-          <div>Pressure : {pressure} hPa</div>
+          <div>Humidity: {weatherData ? `${weatherData.main.humidity}%` : ''}</div>
+          <div>Pressure: {weatherData ? `${weatherData.main.pressure} hPa` : ''}</div>
         </div>
       </header>
-
     </div>
   );
-}
-const styles = {
-  results: {
-    border: '1px solid #111111',
-    borderRadius: 15,
-    backgroundColor: '#111',
-    padding: '2rem',
-    margin: '1rem',
-    boxShadow: 'rgb(84 179 207 / 50%) 3px 3px 2px 0px',
-  }
 }
 
 export default App;
